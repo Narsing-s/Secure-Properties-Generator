@@ -1,7 +1,9 @@
-Secure Properties Generator
+#Secure Properties Generator
+
 This project provides a simple web-based tool for encrypting and decrypting strings using different cryptographic algorithms. The interface is designed to be clean, responsive, and easy to use, allowing developers or learners to quickly test encryption workflows.
 
 Features
+
 🔐 Encryption & Decryption: Choose between encrypting or decrypting values.
 
 ⚙️ Algorithms: Supports AES (default), Blowfish, DES, DESede, RC2, and RCA.
@@ -19,6 +21,7 @@ Features
 👨‍💻 Footer Credit: Linked to the author’s GitHub profile.
 
 How It Works
+
 Select the operation (Encrypt or Decrypt).
 
 Choose the algorithm and mode.
@@ -30,6 +33,7 @@ Click Generate to see the result.
 The output will be shown in the result box.
 
 Tech Stack
+
 HTML5 for structure
 
 CSS3 for styling and alignment
@@ -37,4 +41,5 @@ CSS3 for styling and alignment
 JavaScript for encryption/decryption logic
 
 Author
+
 Created by [Narsing-s](https://github.com/Narsing-s)
