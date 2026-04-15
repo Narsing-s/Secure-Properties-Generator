@@ -32,6 +32,11 @@ Click Generate to see the result.
 
 The output will be shown in the result box.
 
+Interface ui
+
+<img width="1468" height="804" alt="image" src="https://github.com/user-attachments/assets/97f0e217-a986-49a7-ace1-7b29700ade1c" />
+
+
 Tech Stack
 
 HTML5 for structure
