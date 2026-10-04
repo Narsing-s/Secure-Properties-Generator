@@ -4,50 +4,100 @@ A privacy-first browser utility for encrypting and decrypting sensitive applicat
 
 ## 🔐 Security
 
-The generator uses the browser Web Crypto API with:
+The original user interface is intentionally preserved. The security improvements are implemented behind that UI.
+
+The current encryption engine uses:
 
 - **AES-256-GCM** authenticated encryption
 - **PBKDF2-SHA-256** passphrase derivation
 - Random **16-byte salt** for every encryption
 - Random **12-byte IV** for every encryption
-- Configurable 600,000–1,000,000 PBKDF2 iterations
+- **600,000 PBKDF2 iterations**
 - Versioned **SPG1** encrypted envelope
+- Browser **Web Crypto API**
 - No backend, database, account, analytics, or API key
-- Plaintext and passphrases stay in the browser
+- No localStorage/sessionStorage use for secrets
+- Maximum plaintext input of 1 MiB
+- Validation of envelope version, algorithm, KDF, iteration count, salt, IV, and authentication tag
 
-> The previous implementation used Base64 concatenation, which is encoding rather than encryption. It has been replaced with real authenticated encryption.
+OWASP recommends AES with at least a 128-bit key, preferably 256-bit, and recommends authenticated encryption modes such as GCM or CCM where available. citeturn0search0
 
-## ✨ Features
+The previous implementation used Base64 concatenation. Base64 is encoding, not encryption. It has been replaced with authenticated encryption.
 
-- Encrypt / decrypt tabs
-- Compact or readable JSON encrypted envelopes
-- Copy result to clipboard
-- Masked passphrase input
-- Clear local workspace
-- Responsive security-focused UI
-- Static-site deployment
-- No external runtime dependencies
+## Original UI
 
-## How to use
+The visual interface is deliberately kept the same as the original version:
 
-1. Open the application.
-2. Select **Encrypt**.
-3. Enter a strong, unique passphrase.
-4. Enter the property/configuration value.
-5. Select the KDF work factor.
-6. Click **Encrypt securely**.
-7. Store the generated `SPG1` envelope.
-8. To recover the value, select **Decrypt**, paste the envelope, and provide the same passphrase.
+- Secure Properties Generator heading
+- Light gray page background
+- White centered container
+- String tab
+- Encrypt / Decrypt operation
+- Original Algorithm dropdown
+- Original State dropdown
+- Use random IVs checkbox
+- Key field
+- Value field
+- Generate button
+- Result textarea
+- Original footer
+
+The legacy algorithm and mode choices remain visible because preserving the original UI was an explicit requirement. They are **not used as cryptographic implementations**. Secure encryption is performed with AES-256-GCM.
+
+## How it works
+
+### Encrypt
+
+1. Enter the key/passphrase.
+2. Enter the value.
+3. Keep the original default **AES** and **CBC** selections.
+4. Click **Generate**.
+5. The browser derives an AES-256 key with PBKDF2-SHA-256.
+6. A fresh random salt and IV are generated.
+7. The value is encrypted with AES-256-GCM.
+8. The result is returned as an `SPG1.` envelope.
+
+### Decrypt
+
+1. Select **Decrypt**.
+2. Enter the same key/passphrase.
+3. Paste the `SPG1.` encrypted value into the Value field.
+4. Click **Generate**.
+5. The envelope is validated.
+6. AES-GCM authentication is verified.
+7. The original plaintext is returned only when authentication succeeds.
+
+A wrong key or modified ciphertext produces `Invalid encrypted value`.
 
 ## Important security notes
 
-This is a client-side utility, not a replacement for a production secret manager. Never publish your passphrase alongside the encrypted value. If the passphrase is lost, the encrypted value cannot be recovered.
+This is a client-side utility, not a replacement for an enterprise secret manager or KMS.
 
-Use HTTPS when hosting the application publicly. Avoid entering secrets into copies of the application you do not trust.
+- Never publish the passphrase alongside the encrypted value.
+- Never commit plaintext secrets or passphrases to Git.
+- Use HTTPS when hosting publicly.
+- Keep the generated encrypted value protected even though it is encrypted.
+- If the passphrase is lost, the encrypted value cannot be recovered.
+- Do not rely on the legacy dropdown names as evidence that those legacy ciphers are implemented.
+
+OWASP also recommends that cryptographic keys and secrets are not committed to source repositories and that cryptographic operations use reputable, maintained cryptographic implementations. citeturn0search2turn0search3
 
 ## Browser support
 
-Requires a modern browser with Web Crypto API support, including current Chrome, Edge, Firefox and Safari.
+Requires a modern browser with Web Crypto API support and a secure context such as HTTPS or localhost.
+
+## Testing
+
+The repository includes automated checks for:
+
+- JavaScript syntax
+- AES-256-GCM encryption/decryption round trips
+- Randomized ciphertext generation
+- Wrong-passphrase rejection
+- Tamper detection
+- Envelope validation
+- Iteration-bound validation
+- Oversized input rejection
 
 ## Tech stack
 
@@ -56,17 +106,3 @@ HTML5 · CSS3 · JavaScript · Web Crypto API
 ## License
 
 MIT
-
-
-## Algorithm profiles
-
-The UI now exposes two browser-native authenticated encryption profiles:
-
-- **AES-256-GCM** — recommended default.
-- **AES-128-GCM** — available for environments that specifically require a 128-bit AES key.
-
-Earlier versions of this project listed legacy choices such as **Blowfish, DES, 3DES/DESede and RC2**. Those are intentionally not restored. They are not appropriate defaults for a new security utility, and the browser Web Crypto API does not provide native support for those legacy ciphers. OWASP guidance recommends authenticated modes such as GCM/CCM and specifically flags DES and Blowfish among weak/unsuitable primitives. citeturn0search12turn0search13
-
-NIST documents AES-GCM as an authenticated-encryption mode; current NIST guidance also lists AES-256-GCM with a random IV as a suggested authenticated-encryption choice. citeturn0search0turn0search7
-
-This means the project deliberately favors a smaller, safer algorithm surface rather than providing insecure legacy options merely for compatibility.
