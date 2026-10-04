@@ -56,3 +56,17 @@ HTML5 · CSS3 · JavaScript · Web Crypto API
 ## License
 
 MIT
+
+
+## Algorithm profiles
+
+The UI now exposes two browser-native authenticated encryption profiles:
+
+- **AES-256-GCM** — recommended default.
+- **AES-128-GCM** — available for environments that specifically require a 128-bit AES key.
+
+Earlier versions of this project listed legacy choices such as **Blowfish, DES, 3DES/DESede and RC2**. Those are intentionally not restored. They are not appropriate defaults for a new security utility, and the browser Web Crypto API does not provide native support for those legacy ciphers. OWASP guidance recommends authenticated modes such as GCM/CCM and specifically flags DES and Blowfish among weak/unsuitable primitives. citeturn0search12turn0search13
+
+NIST documents AES-GCM as an authenticated-encryption mode; current NIST guidance also lists AES-256-GCM with a random IV as a suggested authenticated-encryption choice. citeturn0search0turn0search7
+
+This means the project deliberately favors a smaller, safer algorithm surface rather than providing insecure legacy options merely for compatibility.
