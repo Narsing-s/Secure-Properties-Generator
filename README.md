@@ -1,50 +1,58 @@
-Secure Properties Generator
+# Secure Properties Generator
 
-This project provides a simple web-based tool for encrypting and decrypting strings using different cryptographic algorithms. The interface is designed to be clean, responsive, and easy to use, allowing developers or learners to quickly test encryption workflows.
+A privacy-first browser utility for encrypting and decrypting sensitive application/configuration values locally.
 
-Features
+## 🔐 Security
 
-🔐 Encryption & Decryption: Choose between encrypting or decrypting values.
+The generator uses the browser Web Crypto API with:
 
-⚙️ Algorithms: Supports AES (default), Blowfish, DES, DESede, RC2, and RCA.
+- **AES-256-GCM** authenticated encryption
+- **PBKDF2-SHA-256** passphrase derivation
+- Random **16-byte salt** for every encryption
+- Random **12-byte IV** for every encryption
+- Configurable 600,000–1,000,000 PBKDF2 iterations
+- Versioned **SPG1** encrypted envelope
+- No backend, database, account, analytics, or API key
+- Plaintext and passphrases stay in the browser
 
-📊 Modes (States): Includes CBC, CFB, ECB, and OFB options.
+> The previous implementation used Base64 concatenation, which is encoding rather than encryption. It has been replaced with real authenticated encryption.
 
-🎲 Random IVs: Option to generate random initialization vectors for added security.
+## ✨ Features
 
-📝 Key & Value Input: Enter your own key and value for processing.
+- Encrypt / decrypt tabs
+- Compact or readable JSON encrypted envelopes
+- Copy result to clipboard
+- Masked passphrase input
+- Clear local workspace
+- Responsive security-focused UI
+- Static-site deployment
+- No external runtime dependencies
 
-📤 Result Output: Displays the generated encrypted or decrypted string in a text area.
+## How to use
 
-💻 Responsive UI: Clean alignment and layout for better usability.
+1. Open the application.
+2. Select **Encrypt**.
+3. Enter a strong, unique passphrase.
+4. Enter the property/configuration value.
+5. Select the KDF work factor.
+6. Click **Encrypt securely**.
+7. Store the generated `SPG1` envelope.
+8. To recover the value, select **Decrypt**, paste the envelope, and provide the same passphrase.
 
-👨‍💻 Footer Credit: Linked to the author’s GitHub profile.
+## Important security notes
 
-How It Works
+This is a client-side utility, not a replacement for a production secret manager. Never publish your passphrase alongside the encrypted value. If the passphrase is lost, the encrypted value cannot be recovered.
 
-Select the operation (Encrypt or Decrypt).
+Use HTTPS when hosting the application publicly. Avoid entering secrets into copies of the application you do not trust.
 
-Choose the algorithm and mode.
+## Browser support
 
-Enter a key and a value.
+Requires a modern browser with Web Crypto API support, including current Chrome, Edge, Firefox and Safari.
 
-Click Generate to see the result.
+## Tech stack
 
-The output will be shown in the result box.
+HTML5 · CSS3 · JavaScript · Web Crypto API
 
-Interface ui
+## License
 
-<img width="1468" height="804" alt="image" src="https://github.com/user-attachments/assets/97f0e217-a986-49a7-ace1-7b29700ade1c" />
-
-
-Tech Stack
-
-HTML5 for structure
-
-CSS3 for styling and alignment
-
-JavaScript for encryption/decryption logic
-
-Author
-
-Created by [Narsing-s](https://github.com/Narsing-s)
+MIT
