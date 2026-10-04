@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none';"><link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none';">
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
 <title>Secure Property Generator</title>
 
 <style>
@@ -178,7 +181,7 @@ textarea {
   <div class="row">
     <div class="field">
       <label>Key</label>
-      <input type="password" id="key" autocomplete="new-password" placeholder="Enter key">
+      <input type="text" id="key" placeholder="Enter key">
     </div>
 
     <div class="field">
@@ -207,25 +210,27 @@ function b64(bytes){let s="";for(const x of bytes)s+=String.fromCharCode(x);retu
 function unb64(s){s=s.replace(/-/g,"+").replace(/_/g,"/");while(s.length%4)s+="=";const bin=atob(s);return Uint8Array.from(bin,c=>c.charCodeAt(0))}
 async function derive(pass,salt,iterations){const base=await crypto.subtle.importKey("raw",enc.encode(pass),"PBKDF2",false,["deriveKey"]);return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["encrypt","decrypt"])}
 async function generate(){
- const operation=document.getElementById("operation").value,key=document.getElementById("key").value,value=document.getElementById("value").value,algorithm=document.getElementById("algorithm").value,mode=document.getElementById("mode").value,useIv=document.getElementById("iv").checked;
- if(!(window.crypto&&crypto.subtle&&window.isSecureContext)){alert("Web Crypto requires HTTPS or localhost.");return}
- if(!key||!value){alert("Please enter key and value");return}
- if(enc.encode(value).byteLength>MAX_BYTES){alert("Value is too large. Maximum size is 1 MiB.");return}
- if(operation==="Encrypt"){
-   if(algorithm!=="AES (default)"||mode!=="CBC (default)"){alert("For secure browser encryption, this version supports AES-GCM only. The original legacy choices are retained in the UI for compatibility but are not implemented.");return}
-   const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),iterations=600000,k=await derive(key,salt,iterations);
-   const ct=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv,tagLength:128},k,enc.encode(value)));
-   const o={v:1,alg:"AES-256-GCM",kdf:"PBKDF2-SHA256",iterations,salt:b64(salt),iv:b64(iv),ciphertext:b64(ct)};
-   document.getElementById("result").value="SPG1."+b64(enc.encode(JSON.stringify(o)));
- }else{
-   try{
-     if(value.length>2*1024*1024)throw new Error();
-     const raw=value.trim().startsWith("SPG1.")?dec.decode(unb64(value.trim().slice(5))):value.trim(),o=JSON.parse(raw),iterations=Number(o.iterations),salt=unb64(o.salt),iv=unb64(o.iv),ct=unb64(o.ciphertext);
-     if(o.v!==1||o.alg!=="AES-256-GCM"||o.kdf!=="PBKDF2-SHA256"||!Number.isInteger(iterations)||iterations<MIN_ITER||iterations>MAX_ITER||salt.length!==16||iv.length!==12||ct.length<16)throw new Error();
-     const k=await derive(key,salt,iterations),plain=await crypto.subtle.decrypt({name:"AES-GCM",iv,tagLength:128},k,ct);
-     document.getElementById("result").value=dec.decode(plain);
-   }catch(e){document.getElementById("result").value="Invalid encrypted value"}
- }
+  const operation=document.getElementById("operation").value,key=document.getElementById("key").value,value=document.getElementById("value").value,algorithm=document.getElementById("algorithm").value,mode=document.getElementById("mode").value;
+  if(!(window.crypto&&crypto.subtle&&window.isSecureContext)){alert("Web Crypto requires HTTPS or localhost.");return}
+  if(!key||!value){alert("Please enter key and value");return}
+  if(enc.encode(value).byteLength>MAX_BYTES){alert("Value is too large. Maximum size is 1 MiB.");return}
+  if(operation==="Encrypt"){
+    if(algorithm!=="AES (default)"||mode!=="CBC (default)"){alert("For secure browser encryption, this version supports AES-GCM only. The original legacy choices are retained in the UI for compatibility but are not implemented.");return}
+    try{
+      const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),iterations=600000,k=await derive(key,salt,iterations);
+      const ct=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv,tagLength:128},k,enc.encode(value)));
+      const o={v:1,alg:"AES-256-GCM",kdf:"PBKDF2-SHA256",iterations,salt:b64(salt),iv:b64(iv),ciphertext:b64(ct)};
+      document.getElementById("result").value="SPG1."+b64(enc.encode(JSON.stringify(o)));
+    }catch(e){document.getElementById("result").value="Encryption failed"}
+  }else{
+    try{
+      if(value.trim().length>2*1024*1024)throw new Error();
+      const raw=value.trim().startsWith("SPG1.")?dec.decode(unb64(value.trim().slice(5))):value.trim(),o=JSON.parse(raw),iterations=Number(o.iterations),salt=unb64(o.salt),iv=unb64(o.iv),ct=unb64(o.ciphertext);
+      if(o.v!==1||o.alg!=="AES-256-GCM"||o.kdf!=="PBKDF2-SHA256"||!Number.isInteger(iterations)||iterations<MIN_ITER||iterations>MAX_ITER||salt.length!==16||iv.length!==12||ct.length<16)throw new Error();
+      const k=await derive(key,salt,iterations),plain=await crypto.subtle.decrypt({name:"AES-GCM",iv,tagLength:128},k,ct);
+      document.getElementById("result").value=dec.decode(plain);
+    }catch(e){document.getElementById("result").value="Invalid encrypted value"}
+  }
 }
 </script>
 
